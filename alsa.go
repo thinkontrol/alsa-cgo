@@ -39,15 +39,31 @@ const (
 	SampleFormatU16LE = C.SND_PCM_FORMAT_U16_LE
 	// Unsigned 16 bit Big Endian
 	SampleFormatU16BE = C.SND_PCM_FORMAT_U16_BE
+	// Signed 24 bit Little Endian using low three bytes in 32-bit word
+	SampleFormatS24_LE = C.SND_PCM_FORMAT_S24_LE
+	// Signed 24 bit Big Endian using low three bytes in 32-bit word
+	SampleFormatS24_BE = C.SND_PCM_FORMAT_S24_BE
+	// Unsigned 24 bit Little Endian using low three bytes in 32-bit word
+	SampleFormatU24_LE = C.SND_PCM_FORMAT_U24_LE
+	// Unsigned 24 bit Big Endian using low three bytes in 32-bit word
+	SampleFormatU24_BE = C.SND_PCM_FORMAT_U24_BE
+	// Signed 32 bit Little Endian
+	SampleFormatS32_LE = C.SND_PCM_FORMAT_S32_LE
+	// Signed 32 bit Big Endian
+	SampleFormatS32_BE = C.SND_PCM_FORMAT_S32_BE
+	// Unsigned 32 bit Little Endian
+	SampleFormatU32_LE = C.SND_PCM_FORMAT_U32_LE
+	// Unsigned 32 bit Big Endian
+	SampleFormatU32_BE = C.SND_PCM_FORMAT_U32_BE
+    // Signed 24bit Little Endian in 3bytes format
+	SampleFormatS24_3LE = C.SND_PCM_FORMAT_S24_3LE
+    // Signed 24bit Big Endian in 3bytes format
+	SampleFormatS24_3BE = C.SND_PCM_FORMAT_S24_3BE
+    // Unsigned 24bit Little Endian in 3bytes format
+	SampleFormatU24_3LE = C.SND_PCM_FORMAT_U24_3LE
+    // Unsigned 24bit Big Endian in 3bytes format
+	SampleFormatU24_3BE = C.SND_PCM_FORMAT_U24_3BE
 	/*
-	 SND_PCM_FORMAT_S24_LE 	Signed 24 bit Little Endian using low three bytes in 32-bit word
-	 SND_PCM_FORMAT_S24_BE 	Signed 24 bit Big Endian using low three bytes in 32-bit word
-	 SND_PCM_FORMAT_U24_LE 	Unsigned 24 bit Little Endian using low three bytes in 32-bit word
-	 SND_PCM_FORMAT_U24_BE 	Unsigned 24 bit Big Endian using low three bytes in 32-bit word
-	 SND_PCM_FORMAT_S32_LE 	Signed 32 bit Little Endian
-	 SND_PCM_FORMAT_S32_BE 	Signed 32 bit Big Endian
-	 SND_PCM_FORMAT_U32_LE 	Unsigned 32 bit Little Endian
-	 SND_PCM_FORMAT_U32_BE 	Unsigned 32 bit Big Endian
 	 SND_PCM_FORMAT_FLOAT_LE 	Float 32 bit Little Endian, Range -1.0 to 1.0
 	 SND_PCM_FORMAT_FLOAT_BE 	Float 32 bit Big Endian, Range -1.0 to 1.0
 	 SND_PCM_FORMAT_FLOAT64_LE 	Float 64 bit Little Endian, Range -1.0 to 1.0
@@ -60,10 +76,6 @@ const (
 	 SND_PCM_FORMAT_MPEG 	MPEG
 	 SND_PCM_FORMAT_GSM 	GSM
 	 SND_PCM_FORMAT_SPECIAL 	Special
-	 SND_PCM_FORMAT_S24_3LE 	Signed 24bit Little Endian in 3bytes format
-	 SND_PCM_FORMAT_S24_3BE 	Signed 24bit Big Endian in 3bytes format
-	 SND_PCM_FORMAT_U24_3LE 	Unsigned 24bit Little Endian in 3bytes format
-	 SND_PCM_FORMAT_U24_3BE 	Unsigned 24bit Big Endian in 3bytes format
 	 SND_PCM_FORMAT_S20_3LE 	Signed 20bit Little Endian in 3bytes format
 	 SND_PCM_FORMAT_S20_3BE 	Signed 20bit Big Endian in 3bytes format
 	 SND_PCM_FORMAT_U20_3LE 	Unsigned 20bit Little Endian in 3bytes format
@@ -258,6 +270,14 @@ func (handle *Handle) SampleSize() int {
 	case SampleFormatS16LE, SampleFromatS16BE,
 		SampleFormatU16LE, SampleFormatU16BE:
 		return 2
+    case SampleFormatS24_3LE, SampleFormatS24_3BE,
+        SampleFormatU24_3LE, SampleFormatU24_3BE:
+        return 3
+	case SampleFormatS24_LE, SampleFormatS24_BE,
+		SampleFormatU24_LE, SampleFormatU24_BE,
+		SampleFormatS32_LE, SampleFormatS32_BE,
+		SampleFormatU32_LE, SampleFormatU32_BE:
+		return 4
 	}
 
 	return 1
