@@ -1,6 +1,6 @@
 include $(GOROOT)/src/Make.inc
 
-TARG=alsa
+TARG=github.com/terual/alsa-go
 
 CGOFILES=\
         alsa.go\
