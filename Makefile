@@ -15,3 +15,4 @@ format:
 arch-install:
 	mkdir -p "$(DESTDIR)$(pkgdir)"
 	cp _obj/$(TARG).a "$(DESTDIR)$(pkgdir)"
+

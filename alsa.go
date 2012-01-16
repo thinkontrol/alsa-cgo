@@ -1,6 +1,7 @@
 // alsa package is the simple wrapper for C alsa binding library.
 package alsa
 
+// #cgo pkg-config: alsa
 // #include <alsa/asoundlib.h>
 import "C"
 
