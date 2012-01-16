@@ -56,13 +56,13 @@ const (
 	SampleFormatU32_LE = C.SND_PCM_FORMAT_U32_LE
 	// Unsigned 32 bit Big Endian
 	SampleFormatU32_BE = C.SND_PCM_FORMAT_U32_BE
-    // Signed 24bit Little Endian in 3bytes format
+	// Signed 24bit Little Endian in 3bytes format
 	SampleFormatS24_3LE = C.SND_PCM_FORMAT_S24_3LE
-    // Signed 24bit Big Endian in 3bytes format
+	// Signed 24bit Big Endian in 3bytes format
 	SampleFormatS24_3BE = C.SND_PCM_FORMAT_S24_3BE
-    // Unsigned 24bit Little Endian in 3bytes format
+	// Unsigned 24bit Little Endian in 3bytes format
 	SampleFormatU24_3LE = C.SND_PCM_FORMAT_U24_3LE
-    // Unsigned 24bit Big Endian in 3bytes format
+	// Unsigned 24bit Big Endian in 3bytes format
 	SampleFormatU24_3BE = C.SND_PCM_FORMAT_U24_3BE
 	/*
 	 SND_PCM_FORMAT_FLOAT_LE 	Float 32 bit Little Endian, Range -1.0 to 1.0
@@ -231,7 +231,7 @@ func (handle *Handle) Write(buf []byte) (wrote int, err os.Error) {
 	if w < 0 {
 		return 0, os.NewError(fmt.Sprintf("Write failed. %s", strError(_Ctype_int(w))))
 	}
-	
+
 	wrote = int(w)
 	wrote *= handle.FrameSize()
 
@@ -250,7 +250,7 @@ func (handle *Handle) Pause() os.Error {
 
 // Unpause PCM.
 func (handle *Handle) Unpause() os.Error {
-	err := C.snd_pcm_pause(handle.cHandle, 0)	
+	err := C.snd_pcm_pause(handle.cHandle, 0)
 	if err != 0 {
 		return os.NewError(fmt.Sprintf("Unpause failed. %s", strError(err)))
 	}
@@ -271,9 +271,9 @@ func (handle *Handle) SampleSize() int {
 	case SampleFormatS16LE, SampleFromatS16BE,
 		SampleFormatU16LE, SampleFormatU16BE:
 		return 2
-    case SampleFormatS24_3LE, SampleFormatS24_3BE,
-        SampleFormatU24_3LE, SampleFormatU24_3BE:
-        return 3
+	case SampleFormatS24_3LE, SampleFormatS24_3BE,
+		SampleFormatU24_3LE, SampleFormatU24_3BE:
+		return 3
 	case SampleFormatS24_LE, SampleFormatS24_BE,
 		SampleFormatU24_LE, SampleFormatU24_BE,
 		SampleFormatS32_LE, SampleFormatS32_BE,
