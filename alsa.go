@@ -35,27 +35,27 @@ const (
 	// Signed 16 bit Little Endian
 	SampleFormatS16LE = C.SND_PCM_FORMAT_S16_LE
 	// Signed 16 bit Big Endian
-	SampleFromatS16BE = C.SND_PCM_FORMAT_S16_BE
+	SampleFormatS16BE = C.SND_PCM_FORMAT_S16_BE
 	// Unsigned 16 bit Little Endian
 	SampleFormatU16LE = C.SND_PCM_FORMAT_U16_LE
 	// Unsigned 16 bit Big Endian
 	SampleFormatU16BE = C.SND_PCM_FORMAT_U16_BE
 	// Signed 24 bit Little Endian using low three bytes in 32-bit word
-	SampleFormatS24_LE = C.SND_PCM_FORMAT_S24_LE
+	SampleFormatS24LE = C.SND_PCM_FORMAT_S24_LE
 	// Signed 24 bit Big Endian using low three bytes in 32-bit word
-	SampleFormatS24_BE = C.SND_PCM_FORMAT_S24_BE
+	SampleFormatS24BE = C.SND_PCM_FORMAT_S24_BE
 	// Unsigned 24 bit Little Endian using low three bytes in 32-bit word
-	SampleFormatU24_LE = C.SND_PCM_FORMAT_U24_LE
+	SampleFormatU24LE = C.SND_PCM_FORMAT_U24_LE
 	// Unsigned 24 bit Big Endian using low three bytes in 32-bit word
-	SampleFormatU24_BE = C.SND_PCM_FORMAT_U24_BE
+	SampleFormatU24BE = C.SND_PCM_FORMAT_U24_BE
 	// Signed 32 bit Little Endian
-	SampleFormatS32_LE = C.SND_PCM_FORMAT_S32_LE
+	SampleFormatS32LE = C.SND_PCM_FORMAT_S32_LE
 	// Signed 32 bit Big Endian
-	SampleFormatS32_BE = C.SND_PCM_FORMAT_S32_BE
+	SampleFormatS32BE = C.SND_PCM_FORMAT_S32_BE
 	// Unsigned 32 bit Little Endian
-	SampleFormatU32_LE = C.SND_PCM_FORMAT_U32_LE
+	SampleFormatU32LE = C.SND_PCM_FORMAT_U32_LE
 	// Unsigned 32 bit Big Endian
-	SampleFormatU32_BE = C.SND_PCM_FORMAT_U32_BE
+	SampleFormatU32BE = C.SND_PCM_FORMAT_U32_BE
 	// Signed 24bit Little Endian in 3bytes format
 	SampleFormatS24_3LE = C.SND_PCM_FORMAT_S24_3LE
 	// Signed 24bit Big Endian in 3bytes format
@@ -268,16 +268,16 @@ func (handle *Handle) SampleSize() int {
 	switch handle.SampleFormat {
 	case SampleFormatS8, SampleFormatU8:
 		return 1
-	case SampleFormatS16LE, SampleFromatS16BE,
+	case SampleFormatS16LE, SampleFormatS16BE,
 		SampleFormatU16LE, SampleFormatU16BE:
 		return 2
 	case SampleFormatS24_3LE, SampleFormatS24_3BE,
 		SampleFormatU24_3LE, SampleFormatU24_3BE:
 		return 3
-	case SampleFormatS24_LE, SampleFormatS24_BE,
-		SampleFormatU24_LE, SampleFormatU24_BE,
-		SampleFormatS32_LE, SampleFormatS32_BE,
-		SampleFormatU32_LE, SampleFormatU32_BE:
+	case SampleFormatS24LE, SampleFormatS24BE,
+		SampleFormatU24LE, SampleFormatU24BE,
+		SampleFormatS32LE, SampleFormatS32BE,
+		SampleFormatU32LE, SampleFormatU32BE:
 		return 4
 	}
 
