@@ -6,7 +6,7 @@ package alsa
 import "C"
 
 import (
-	"os"
+	"errors"
 	"unsafe"
 	"fmt"
 )
@@ -127,7 +127,7 @@ func New() *Handle {
 }
 
 // Open opens a stream.
-func (handle *Handle) Open(device string, streamType StreamType, mode int) os.Error {
+func (handle *Handle) Open(device string, streamType StreamType, mode int) errors.Error {
 	cDevice := C.CString(device)
 	defer C.free(unsafe.Pointer(cDevice))
 
@@ -136,7 +136,7 @@ func (handle *Handle) Open(device string, streamType StreamType, mode int) os.Er
 		_Ctype_int(mode))
 
 	if err < 0 {
-		return os.NewError(fmt.Sprintf("Cannot open audio device '%s'. %s",
+		return errors.New(fmt.Sprintf("Cannot open audio device '%s'. %s",
 			device, strError(err)))
 	}
 
@@ -144,43 +144,43 @@ func (handle *Handle) Open(device string, streamType StreamType, mode int) os.Er
 }
 
 // ApplyHwParams changes ALSA hardware parameters for the current stream.
-func (handle *Handle) ApplyHwParams() os.Error {
+func (handle *Handle) ApplyHwParams() errors.Error {
 	var cHwParams *C.snd_pcm_hw_params_t
 
 	err := C.snd_pcm_hw_params_malloc(&cHwParams)
 	if err < 0 {
-		return os.NewError(fmt.Sprintf("Cannot allocate hardware parameter structure. %s",
+		return errors.New(fmt.Sprintf("Cannot allocate hardware parameter structure. %s",
 			strError(err)))
 	}
 
 	err = C.snd_pcm_hw_params_any(handle.cHandle, cHwParams)
 	if err < 0 {
-		return os.NewError(fmt.Sprintf("Cannot initialize hardware parameter structure. %s",
+		return errors.New(fmt.Sprintf("Cannot initialize hardware parameter structure. %s",
 			strError(err)))
 	}
 
 	err = C.snd_pcm_hw_params_set_access(handle.cHandle, cHwParams, C.SND_PCM_ACCESS_RW_INTERLEAVED)
 	if err < 0 {
-		return os.NewError(fmt.Sprintf("Cannot set access type. %s",
+		return errors.New(fmt.Sprintf("Cannot set access type. %s",
 			strError(err)))
 	}
 
 	err = C.snd_pcm_hw_params_set_format(handle.cHandle, cHwParams, _Ctypedef_snd_pcm_format_t(handle.SampleFormat))
 	if err < 0 {
-		return os.NewError(fmt.Sprintf("Cannot set sample format. %s",
+		return errors.New(fmt.Sprintf("Cannot set sample format. %s",
 			strError(err)))
 	}
 
 	var cSampleRate _Ctype_uint = _Ctype_uint(handle.SampleRate)
 	err = C.snd_pcm_hw_params_set_rate_near(handle.cHandle, cHwParams, &cSampleRate, nil)
 	if err < 0 {
-		return os.NewError(fmt.Sprintf("Cannot set sample rate. %s",
+		return errors.New(fmt.Sprintf("Cannot set sample rate. %s",
 			strError(err)))
 	}
 
 	err = C.snd_pcm_hw_params_set_channels(handle.cHandle, cHwParams, _Ctype_uint(handle.Channels))
 	if err < 0 {
-		return os.NewError(fmt.Sprintf("Cannot set number of channels. %s",
+		return errors.New(fmt.Sprintf("Cannot set number of channels. %s",
 			strError(err)))
 	}
 
@@ -188,7 +188,7 @@ func (handle *Handle) ApplyHwParams() os.Error {
 		// Set number of periods. Periods used to be called fragments.
 		/*err = C.snd_pcm_hw_params_set_periods(handle.cHandle, cHwParams, _Ctype_uint(handle.Periods), 0)
 		if err < 0 {
-			return os.NewError(fmt.Sprintf("Cannot set number of periods. %s",
+			return errors.New(fmt.Sprintf("Cannot set number of periods. %s",
 				strError(err)))
 		}*/
 
@@ -196,7 +196,7 @@ func (handle *Handle) ApplyHwParams() os.Error {
 		var cDir _Ctype_int = 0 // Exact value is <,=,> the returned one following dir (-1,0,1) 
 		err = C.snd_pcm_hw_params_set_periods_near(handle.cHandle, cHwParams, &cPeriods, &cDir)
 		if err < 0 {
-			return os.NewError(fmt.Sprintf("Cannot set number of periods. %s",
+			return errors.New(fmt.Sprintf("Cannot set number of periods. %s",
 				strError(err)))
 		}
 	}
@@ -206,14 +206,14 @@ func (handle *Handle) ApplyHwParams() os.Error {
 		// latency = periodsize * periods / (rate * bytes_per_frame)
 		/*err = C.snd_pcm_hw_params_set_buffer_size(handle.cHandle, cHwParams, _Ctypedef_snd_pcm_uframes_t(handle.Buffersize))
 		if err < 0 {
-			return os.NewError(fmt.Sprintf("Cannot set buffersize. %s",
+			return errors.New(fmt.Sprintf("Cannot set buffersize. %s",
 				strError(err)))
 		}*/
 
 		var cBuffersize _Ctypedef_snd_pcm_uframes_t = _Ctypedef_snd_pcm_uframes_t(handle.Buffersize)
 		err = C.snd_pcm_hw_params_set_buffer_size_near(handle.cHandle, cHwParams, &cBuffersize)
 		if err < 0 {
-			return os.NewError(fmt.Sprintf("Cannot set buffersize. %s",
+			return errors.New(fmt.Sprintf("Cannot set buffersize. %s",
 				strError(err)))
 		}
 
@@ -224,7 +224,7 @@ func (handle *Handle) ApplyHwParams() os.Error {
 
 	err = C.snd_pcm_hw_params(handle.cHandle, cHwParams)
 	if err < 0 {
-		return os.NewError(fmt.Sprintf("Cannot set hardware parameters. %s",
+		return errors.New(fmt.Sprintf("Cannot set hardware parameters. %s",
 			strError(err)))
 	}
 
@@ -235,11 +235,11 @@ func (handle *Handle) ApplyHwParams() os.Error {
 
 // Drain stream. For playback wait for all pending frames to be played and 
 // then stop the PCM. For capture stop PCM permitting to retrieve residual frames.
-func (handle *Handle) Drain() os.Error {
+func (handle *Handle) Drain() errors.Error {
 
 	err := C.snd_pcm_drain(handle.cHandle)
 	if err < 0 {
-		return os.NewError(fmt.Sprintf("Cannot drain stream. %s",
+		return errors.New(fmt.Sprintf("Cannot drain stream. %s",
 			strError(err)))
 	}
 	return nil
@@ -248,11 +248,11 @@ func (handle *Handle) Drain() os.Error {
 
 // Drop stream, this function stops the PCM immediately. 
 // The pending samples on the buffer are ignored.
-func (handle *Handle) Drop() os.Error {
+func (handle *Handle) Drop() errors.Error {
 
 	err := C.snd_pcm_drop(handle.cHandle)
 	if err < 0 {
-		return os.NewError(fmt.Sprintf("Cannot drop stream. %s",
+		return errors.New(fmt.Sprintf("Cannot drop stream. %s",
 			strError(err)))
 	}
 	return nil
@@ -260,25 +260,25 @@ func (handle *Handle) Drop() os.Error {
 }
 
 // MaxSampleRate returns the maximum samplerate possible for the device
-func (handle *Handle) MaxSampleRate() (int, os.Error) {
+func (handle *Handle) MaxSampleRate() (int, errors.Error) {
 
 	var cHwParams *C.snd_pcm_hw_params_t
 
 	err := C.snd_pcm_hw_params_malloc(&cHwParams)
 	if err < 0 {
-		return 0, os.NewError(fmt.Sprintf("Cannot allocate hardware parameter structure. %s",
+		return 0, errors.New(fmt.Sprintf("Cannot allocate hardware parameter structure. %s",
 			strError(err)))
 	}
 
 	err = C.snd_pcm_hw_params_any(handle.cHandle, cHwParams)
 	if err < 0 {
-		return 0, os.NewError(fmt.Sprintf("Cannot initialize hardware parameter structure. %s",
+		return 0, errors.New(fmt.Sprintf("Cannot initialize hardware parameter structure. %s",
 			strError(err)))
 	}
 
 	err = C.snd_pcm_hw_params_set_rate_resample(handle.cHandle, cHwParams, 0)
 	if err < 0 {
-		return 0, os.NewError(fmt.Sprintf("Cannot restrict configuration space to contain only real hardware rates. %s",
+		return 0, errors.New(fmt.Sprintf("Cannot restrict configuration space to contain only real hardware rates. %s",
 			strError(err)))
 	}
 
@@ -287,7 +287,7 @@ func (handle *Handle) MaxSampleRate() (int, os.Error) {
 
 	err = C.snd_pcm_hw_params_get_rate_max(cHwParams, &maxRate, &dir)
 	if err < 0 {
-		return 0, os.NewError(fmt.Sprintf("Retrieving maximum samplerate failed. %s", err))
+		return 0, errors.New(fmt.Sprintf("Retrieving maximum samplerate failed. %s", err))
 	}
 
 	C.snd_pcm_hw_params_free(cHwParams)
@@ -298,24 +298,24 @@ func (handle *Handle) MaxSampleRate() (int, os.Error) {
 
 // Delay returns the numbers of frames between the time that a frame that 
 // is written to the PCM stream and it to be actually audible.
-func (handle *Handle) Delay() (int, os.Error) {
+func (handle *Handle) Delay() (int, errors.Error) {
 	var delay C.snd_pcm_sframes_t
 	err := C.snd_pcm_delay(handle.cHandle, &delay)
 	if err < 0 {
-		return 0, os.NewError(fmt.Sprintf("Retrieving delay failed. %s", strError(_Ctype_int(delay))))
+		return 0, errors.New(fmt.Sprintf("Retrieving delay failed. %s", strError(_Ctype_int(delay))))
 	}
 
 	return int(_Ctype_int(delay)), nil
 }
 
 // Skip certain number of frames
-func (handle *Handle) SkipFrames(frames int) (int, os.Error) {
+func (handle *Handle) SkipFrames(frames int) (int, errors.Error) {
 
 	// Get safe count of frames which can be forwarded.
 	var framesForwardable C.snd_pcm_sframes_t
 	framesForwardable = C.snd_pcm_forwardable(handle.cHandle)
 	if framesForwardable < 0 {
-		return 0, os.NewError(fmt.Sprintf("Retrieving forwardable frames failed. %s", strError(_Ctype_int(framesForwardable))))
+		return 0, errors.New(fmt.Sprintf("Retrieving forwardable frames failed. %s", strError(_Ctype_int(framesForwardable))))
 	}
 
 	if int(_Ctype_int(framesForwardable)) < frames {
@@ -326,7 +326,7 @@ func (handle *Handle) SkipFrames(frames int) (int, os.Error) {
 	var framesForwarded C.snd_pcm_sframes_t
 	framesForwarded = C.snd_pcm_forward(handle.cHandle, _Ctypedef_snd_pcm_uframes_t(frames))
 	if framesForwarded < 0 {
-		return 0, os.NewError(fmt.Sprintf("Cannot forward frames. %s", strError(_Ctype_int(framesForwarded))))
+		return 0, errors.New(fmt.Sprintf("Cannot forward frames. %s", strError(_Ctype_int(framesForwarded))))
 	}
 
 	return int(_Ctype_int(framesForwarded)), nil
@@ -335,20 +335,20 @@ func (handle *Handle) SkipFrames(frames int) (int, os.Error) {
 // Wait waits till buffer will be free for some new portion of data or
 // delay time is runs out.
 // true ok value means that PCM stream is ready for I/O, false -- timeout occured.
-func (handle *Handle) Wait(maxDelay int) (ok bool, err os.Error) {
+func (handle *Handle) Wait(maxDelay int) (ok bool, err errors.Error) {
 	res, err := C.snd_pcm_wait(handle.cHandle, _Ctype_int(maxDelay))
 	if err != nil {
-		return false, os.NewError(fmt.Sprintf("Pool failed. %s", err))
+		return false, errors.New(fmt.Sprintf("Pool failed. %s", err))
 	}
 
 	return res > 0, nil
 }
 
 // AvailUpdate returns number of bytes ready to be read/written.
-func (handle *Handle) AvailUpdate() (freeBytes int, err os.Error) {
+func (handle *Handle) AvailUpdate() (freeBytes int, err errors.Error) {
 	frames := C.snd_pcm_avail_update(handle.cHandle)
 	if frames < 0 {
-		return 0, os.NewError(fmt.Sprintf("Retriving free buffer size failed. %s", strError(_Ctype_int(frames))))
+		return 0, errors.New(fmt.Sprintf("Retriving free buffer size failed. %s", strError(_Ctype_int(frames))))
 	}
 
 	return int(frames) * handle.FrameSize(), nil
@@ -356,10 +356,10 @@ func (handle *Handle) AvailUpdate() (freeBytes int, err os.Error) {
 
 // Write writes given PCM data.
 // Returns wrote value is total bytes was written.
-func (handle *Handle) Write(buf []byte) (wrote int, err os.Error) {
+func (handle *Handle) Write(buf []byte) (wrote int, err errors.Error) {
 
 	if handle.Channels == 0 {
-		return 0, os.NewError(fmt.Sprintf("Channel count is zero"))
+		return 0, errors.New(fmt.Sprintf("Channel count is zero"))
 	}
 
 	frames := len(buf) / handle.SampleSize() / handle.Channels
@@ -372,7 +372,7 @@ func (handle *Handle) Write(buf []byte) (wrote int, err os.Error) {
 	}
 
 	if w < 0 {
-		return 0, os.NewError(fmt.Sprintf("Write failed. %s", strError(_Ctype_int(w))))
+		return 0, errors.New(fmt.Sprintf("Write failed. %s", strError(_Ctype_int(w))))
 	}
 
 	wrote = int(w)
@@ -382,20 +382,20 @@ func (handle *Handle) Write(buf []byte) (wrote int, err os.Error) {
 }
 
 // Pause PCM.
-func (handle *Handle) Pause() os.Error {
+func (handle *Handle) Pause() errors.Error {
 	err := C.snd_pcm_pause(handle.cHandle, 1)
 	if err != 0 {
-		return os.NewError(fmt.Sprintf("Pause failed. %s", strError(err)))
+		return errors.New(fmt.Sprintf("Pause failed. %s", strError(err)))
 	}
 
 	return nil
 }
 
 // Unpause PCM.
-func (handle *Handle) Unpause() os.Error {
+func (handle *Handle) Unpause() errors.Error {
 	err := C.snd_pcm_pause(handle.cHandle, 0)
 	if err != 0 {
-		return os.NewError(fmt.Sprintf("Unpause failed. %s", strError(err)))
+		return errors.New(fmt.Sprintf("Unpause failed. %s", strError(err)))
 	}
 
 	return nil
