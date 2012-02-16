@@ -114,7 +114,7 @@ type Handle struct {
 	// Channels in the stream. 2 for stereo.
 	Channels int
 	// The interval between interrupts from the hardware
-	Periods    int
+	Periods int
 	// Size of buffer in frames
 	Buffersize int
 }
