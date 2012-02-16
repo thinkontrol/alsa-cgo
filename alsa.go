@@ -132,7 +132,7 @@ func (handle *Handle) Open(device string, streamType StreamType, mode int) error
 	defer C.free(unsafe.Pointer(cDevice))
 
 	err := C.snd_pcm_open(&(handle.cHandle), cDevice,
-		_Ctypedef_snd_pcm_stream_t(streamType),
+		C.snd_pcm_stream_t(streamType),
 		_Ctype_int(mode))
 
 	if err < 0 {
@@ -165,7 +165,7 @@ func (handle *Handle) ApplyHwParams() error {
 			strError(err)))
 	}
 
-	err = C.snd_pcm_hw_params_set_format(handle.cHandle, cHwParams, _Ctypedef_snd_pcm_format_t(handle.SampleFormat))
+	err = C.snd_pcm_hw_params_set_format(handle.cHandle, cHwParams, C.snd_pcm_format_t(handle.SampleFormat))
 	if err < 0 {
 		return errors.New(fmt.Sprintf("Cannot set sample format. %s",
 			strError(err)))
@@ -210,7 +210,7 @@ func (handle *Handle) ApplyHwParams() error {
 				strError(err)))
 		}*/
 
-		var cBuffersize _Ctypedef_snd_pcm_uframes_t = _Ctypedef_snd_pcm_uframes_t(handle.Buffersize)
+		var cBuffersize C.snd_pcm_uframes_t = C.snd_pcm_uframes_t(handle.Buffersize)
 		err = C.snd_pcm_hw_params_set_buffer_size_near(handle.cHandle, cHwParams, &cBuffersize)
 		if err < 0 {
 			return errors.New(fmt.Sprintf("Cannot set buffersize. %s",
@@ -324,7 +324,7 @@ func (handle *Handle) SkipFrames(frames int) (int, error) {
 
 	// Move application frame position forward.
 	var framesForwarded C.snd_pcm_sframes_t
-	framesForwarded = C.snd_pcm_forward(handle.cHandle, _Ctypedef_snd_pcm_uframes_t(frames))
+	framesForwarded = C.snd_pcm_forward(handle.cHandle, C.snd_pcm_uframes_t(frames))
 	if framesForwarded < 0 {
 		return 0, errors.New(fmt.Sprintf("Cannot forward frames. %s", strError(_Ctype_int(framesForwarded))))
 	}
@@ -363,12 +363,12 @@ func (handle *Handle) Write(buf []byte) (wrote int, err error) {
 	}
 
 	frames := len(buf) / handle.SampleSize() / handle.Channels
-	w := C.snd_pcm_writei(handle.cHandle, unsafe.Pointer(&buf[0]), _Ctypedef_snd_pcm_uframes_t(frames))
+	w := C.snd_pcm_writei(handle.cHandle, unsafe.Pointer(&buf[0]), C.snd_pcm_uframes_t(frames))
 
 	// Underrun? Retry.
 	if w == -C.EPIPE {
 		C.snd_pcm_prepare(handle.cHandle)
-		w = C.snd_pcm_writei(handle.cHandle, unsafe.Pointer(&buf[0]), _Ctypedef_snd_pcm_uframes_t(frames))
+		w = C.snd_pcm_writei(handle.cHandle, unsafe.Pointer(&buf[0]), C.snd_pcm_uframes_t(frames))
 	}
 
 	if w < 0 {
