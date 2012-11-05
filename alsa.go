@@ -381,17 +381,17 @@ func (handle *Handle) Write(buf []byte) (wrote int, err error) {
 
 // Read reads PCM data from microphone device
 // Return read value in number of bytes read.
-func (handle *Handle) Read(buf []byte) (n int, err error){
-    count := len(buf)
+func (handle *Handle) Read(buf []byte) (n int, err error) {
+	count := len(buf)
 
-    buf_p := unsafe.Pointer(&buf[0])
-    n_c := C.snd_pcm_readi(handle.cHandle, buf_p, C.snd_pcm_uframes_t(count))
-    n = int(n_c)
-    if n < 0{
-        err = errors.New(fmt.Sprintf("Read error: %s", n))
-        return n, err
-    }
-    return n, nil
+	buf_p := unsafe.Pointer(&buf[0])
+	n_c := C.snd_pcm_readi(handle.cHandle, buf_p, C.snd_pcm_uframes_t(count))
+	n = int(n_c)
+	if n < 0 {
+		err = errors.New(fmt.Sprintf("Read error: %s", n))
+		return n, err
+	}
+	return n, nil
 }
 
 // Pause PCM.
