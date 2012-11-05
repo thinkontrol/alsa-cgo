@@ -122,7 +122,6 @@ type Handle struct {
 // New returns newly initialized ALSA handler.
 func New() *Handle {
 	handler := new(Handle)
-
 	return handler
 }
 
@@ -216,7 +215,6 @@ func (handle *Handle) ApplyHwParams() error {
 			return errors.New(fmt.Sprintf("Cannot set buffersize. %s",
 				strError(err)))
 		}
-
 	}
 
 	// Drain current data and make sure we aren't underrun.
@@ -227,6 +225,11 @@ func (handle *Handle) ApplyHwParams() error {
 		return errors.New(fmt.Sprintf("Cannot set hardware parameters. %s",
 			strError(err)))
 	}
+    chunk_size := C.snd_pcm_uframes_t(0)
+	C.snd_pcm_hw_params_get_period_size(cHwParams, &chunk_size, nil);
+
+    handle.Buffersize = int(chunk_size)
+    handle.buf = make([]byte, handle.Buffersize)
 
 	C.snd_pcm_hw_params_free(cHwParams)
 
@@ -379,6 +382,21 @@ func (handle *Handle) Write(buf []byte) (wrote int, err error) {
 	wrote *= handle.FrameSize()
 
 	return wrote, nil
+}
+
+// Read reads PCM data from microphone device
+// Return read value in number of bytes read.
+func (handle *Handle) Read(buf []byte) (n int, err error){
+    count := len(buf)
+
+    buf_p := unsafe.Pointer(&buf[0])
+    n_c := C.snd_pcm_readi(handle.cHandle, buf_p, C.snd_pcm_uframes_t(count))
+    n = int(n_c)
+    if n < 0{
+        err = errors.New(fmt.Sprintf("Read error: %s", n))
+        return n, err
+    }
+    return n, nil
 }
 
 // Pause PCM.
