@@ -225,11 +225,6 @@ func (handle *Handle) ApplyHwParams() error {
 		return errors.New(fmt.Sprintf("Cannot set hardware parameters. %s",
 			strError(err)))
 	}
-    chunk_size := C.snd_pcm_uframes_t(0)
-	C.snd_pcm_hw_params_get_period_size(cHwParams, &chunk_size, nil);
-
-    handle.Buffersize = int(chunk_size)
-    handle.buf = make([]byte, handle.Buffersize)
 
 	C.snd_pcm_hw_params_free(cHwParams)
 
