@@ -93,7 +93,7 @@ const (
 	 SND_PCM_FORMAT_U32 	Unsigned 32 bit CPU endian
 	 SND_PCM_FORMAT_FLOAT 	Float 32 bit CPU endian
 	 SND_PCM_FORMAT_FLOAT64 	Float 64 bit CPU endian
-	 SND_PCM_FORMAT_IEC958_SUBFRAME 	IEC-958 CPU Endian 
+	 SND_PCM_FORMAT_IEC958_SUBFRAME 	IEC-958 CPU Endian
 	*/
 )
 
@@ -132,7 +132,7 @@ func (handle *Handle) Open(device string, streamType StreamType, mode int) error
 
 	err := C.snd_pcm_open(&(handle.cHandle), cDevice,
 		C.snd_pcm_stream_t(streamType),
-		_Ctype_int(mode))
+		C.int(mode))
 
 	if err < 0 {
 		return errors.New(fmt.Sprintf("Cannot open audio device '%s'. %s",
@@ -170,14 +170,14 @@ func (handle *Handle) ApplyHwParams() error {
 			strError(err)))
 	}
 
-	var cSampleRate _Ctype_uint = _Ctype_uint(handle.SampleRate)
+	var cSampleRate C.uint = C.uint(handle.SampleRate)
 	err = C.snd_pcm_hw_params_set_rate_near(handle.cHandle, cHwParams, &cSampleRate, nil)
 	if err < 0 {
 		return errors.New(fmt.Sprintf("Cannot set sample rate. %s",
 			strError(err)))
 	}
 
-	err = C.snd_pcm_hw_params_set_channels(handle.cHandle, cHwParams, _Ctype_uint(handle.Channels))
+	err = C.snd_pcm_hw_params_set_channels(handle.cHandle, cHwParams, C.uint(handle.Channels))
 	if err < 0 {
 		return errors.New(fmt.Sprintf("Cannot set number of channels. %s",
 			strError(err)))
@@ -185,14 +185,14 @@ func (handle *Handle) ApplyHwParams() error {
 
 	if handle.Periods > 0 {
 		// Set number of periods. Periods used to be called fragments.
-		/*err = C.snd_pcm_hw_params_set_periods(handle.cHandle, cHwParams, _Ctype_uint(handle.Periods), 0)
+		/*err = C.snd_pcm_hw_params_set_periods(handle.cHandle, cHwParams, C.uint(handle.Periods), 0)
 		if err < 0 {
 			return os.NewError(fmt.Sprintf("Cannot set number of periods. %s",
 				strError(err)))
 		}*/
 
-		var cPeriods _Ctype_uint = _Ctype_uint(handle.Periods)
-		var cDir _Ctype_int = 0 // Exact value is <,=,> the returned one following dir (-1,0,1) 
+		var cPeriods C.uint = C.uint(handle.Periods)
+		var cDir C.int = 0 // Exact value is <,=,> the returned one following dir (-1,0,1)
 		err = C.snd_pcm_hw_params_set_periods_near(handle.cHandle, cHwParams, &cPeriods, &cDir)
 		if err < 0 {
 			return errors.New(fmt.Sprintf("Cannot set number of periods. %s",
@@ -231,7 +231,7 @@ func (handle *Handle) ApplyHwParams() error {
 	return nil
 }
 
-// Drain stream. For playback wait for all pending frames to be played and 
+// Drain stream. For playback wait for all pending frames to be played and
 // then stop the PCM. For capture stop PCM permitting to retrieve residual frames.
 func (handle *Handle) Drain() error {
 
@@ -244,7 +244,7 @@ func (handle *Handle) Drain() error {
 
 }
 
-// Drop stream, this function stops the PCM immediately. 
+// Drop stream, this function stops the PCM immediately.
 // The pending samples on the buffer are ignored.
 func (handle *Handle) Drop() error {
 
@@ -294,16 +294,16 @@ func (handle *Handle) MaxSampleRate() (int, error) {
 
 }
 
-// Delay returns the numbers of frames between the time that a frame that 
+// Delay returns the numbers of frames between the time that a frame that
 // is written to the PCM stream and it to be actually audible.
 func (handle *Handle) Delay() (int, error) {
 	var delay C.snd_pcm_sframes_t
 	err := C.snd_pcm_delay(handle.cHandle, &delay)
 	if err < 0 {
-		return 0, errors.New(fmt.Sprintf("Retrieving delay failed. %s", strError(_Ctype_int(delay))))
+		return 0, errors.New(fmt.Sprintf("Retrieving delay failed. %s", strError(C.int(delay))))
 	}
 
-	return int(_Ctype_int(delay)), nil
+	return int(C.int(delay)), nil
 }
 
 // Skip certain number of frames
@@ -313,28 +313,28 @@ func (handle *Handle) SkipFrames(frames int) (int, error) {
 	var framesForwardable C.snd_pcm_sframes_t
 	framesForwardable = C.snd_pcm_forwardable(handle.cHandle)
 	if framesForwardable < 0 {
-		return 0, errors.New(fmt.Sprintf("Retrieving forwardable frames failed. %s", strError(_Ctype_int(framesForwardable))))
+		return 0, errors.New(fmt.Sprintf("Retrieving forwardable frames failed. %s", strError(C.int(framesForwardable))))
 	}
 
-	if int(_Ctype_int(framesForwardable)) < frames {
-		frames = int(_Ctype_int(framesForwardable))
+	if int(C.int(framesForwardable)) < frames {
+		frames = int(C.int(framesForwardable))
 	}
 
 	// Move application frame position forward.
 	var framesForwarded C.snd_pcm_sframes_t
 	framesForwarded = C.snd_pcm_forward(handle.cHandle, C.snd_pcm_uframes_t(frames))
 	if framesForwarded < 0 {
-		return 0, errors.New(fmt.Sprintf("Cannot forward frames. %s", strError(_Ctype_int(framesForwarded))))
+		return 0, errors.New(fmt.Sprintf("Cannot forward frames. %s", strError(C.int(framesForwarded))))
 	}
 
-	return int(_Ctype_int(framesForwarded)), nil
+	return int(C.int(framesForwarded)), nil
 }
 
 // Wait waits till buffer will be free for some new portion of data or
 // delay time is runs out.
 // true ok value means that PCM stream is ready for I/O, false -- timeout occured.
 func (handle *Handle) Wait(maxDelay int) (ok bool, err error) {
-	res, err := C.snd_pcm_wait(handle.cHandle, _Ctype_int(maxDelay))
+	res, err := C.snd_pcm_wait(handle.cHandle, C.int(maxDelay))
 	if err != nil {
 		return false, errors.New(fmt.Sprintf("Pool failed. %s", err))
 	}
@@ -346,7 +346,7 @@ func (handle *Handle) Wait(maxDelay int) (ok bool, err error) {
 func (handle *Handle) AvailUpdate() (freeBytes int, err error) {
 	frames := C.snd_pcm_avail_update(handle.cHandle)
 	if frames < 0 {
-		return 0, errors.New(fmt.Sprintf("Retriving free buffer size failed. %s", strError(_Ctype_int(frames))))
+		return 0, errors.New(fmt.Sprintf("Retriving free buffer size failed. %s", strError(C.int(frames))))
 	}
 
 	return int(frames) * handle.FrameSize(), nil
@@ -370,7 +370,7 @@ func (handle *Handle) Write(buf []byte) (wrote int, err error) {
 	}
 
 	if w < 0 {
-		return 0, errors.New(fmt.Sprintf("Write failed. %s", strError(_Ctype_int(w))))
+		return 0, errors.New(fmt.Sprintf("Write failed. %s", strError(C.int(w))))
 	}
 
 	wrote = int(w)
@@ -446,7 +446,7 @@ func (handle *Handle) FrameSize() int {
 }
 
 // strError retruns string description of ALSA error by its code.
-func strError(err _Ctype_int) string {
+func strError(err C.int) string {
 	cErrMsg := C.snd_strerror(err)
 
 	return C.GoString(cErrMsg)
